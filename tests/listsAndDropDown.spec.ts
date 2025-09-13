@@ -31,7 +31,7 @@ test.describe('Lists and Drop Downs', () => {
         await expect(page.locator('#owner_name')).toHaveValue("George Franklin")
 
         // 8. Add the assertion the value "cat" is displayed in the "Type" field 
-        await expect(page.locator('.form-group', { hasText: "Type" }).getByRole('textbox')).toHaveValue('cat')
+        await expect(page.getByLabel('Type')).toHaveValue('cat')
 
         // 9. Using a loop, select the values from the drop-down one by one, and add the assertion, that every selected value from the drop-down is displayed in the "Type" field
         const pets = ["cat", "dog", "lizard", "snake", "bird", "hamster"]
@@ -43,45 +43,46 @@ test.describe('Lists and Drop Downs', () => {
 
     test('TC2: Validate the pet type update', async ({ page }) => {
 
-        //Locator:
+        //Locators:
         const petTypeDropDown = page.locator('[name="pettype"]')
+        const petRosy = page.locator('app-pet-list', { hasText: "Rosy" })
 
         // 3. Select the owner "Eduardo Rodriquez"
         await page.getByRole('link', { name: "Eduardo Rodriquez" }).click()
 
         // 4. In the "Pets and Visits" section, click on "Edit Pet" button for the pet with a name "Rosy"
-        await page.locator('td', { hasText: "Rosy" }).getByRole('button', { name: "Edit Pet" }).click()
+        await petRosy.getByRole('button', { name: "Edit Pet" }).click()
 
         // 5. Add the assertion that name "Rosy" is displayed in the input field "Name"
-        await expect(page.locator('.form-group', { hasText: "Name" }).getByRole('textbox')).toHaveValue('Rosy')
+        await expect(page.getByLabel('Name')).toHaveValue('Rosy')
 
         // 6. Add the assertion the value "dog" is displayed in the "Type" field 
-        await expect(page.locator('.form-group', { hasText: "Type" }).getByRole('textbox')).toHaveValue('dog')
+        await expect(page.getByLabel('Type')).toHaveValue('dog')
 
         // 7. From the drop-down menu, select the value "bird"
         await petTypeDropDown.selectOption('bird')
 
         // 8. On the "Pet details" page, add the assertion the value "bird" is displayed in the "Type" field as well as drop-down input field
-        await expect(page.locator('.form-group', { hasText: "Type" }).getByRole('textbox')).toHaveValue('bird')
+        await expect(page.getByLabel('Type')).toHaveValue('bird')
         await expect(petTypeDropDown).toContainText('bird')
 
         // 9. Select "Update Pet" button
         await page.getByRole('button', { name: "Update Pet" }).click()
 
         // 10. On the "Owner Information" page, add the assertion that pet "Rosy" has a new value of the Type "bird"
-        await expect(page.locator('app-pet-list', { hasText: "Rosy" }).locator('.dl-horizontal')).toContainText('bird')
+        await expect(petRosy.getByRole('row', {name: "Type"})).toContainText('bird')
 
         // 11. Select "Edit Pet" button one more time, and perform steps 6-10 to revert the selection of the pet type "bird" to its initial value "dog
-        await page.locator('td', { hasText: "Rosy" }).getByRole('button', { name: "Edit Pet" }).click()
+        await petRosy.getByRole('button', { name: "Edit Pet" }).click()
 
-        await expect(page.locator('.form-group', { hasText: "Type" }).getByRole('textbox')).toHaveValue('bird')
+        await expect(page.getByLabel('Type')).toHaveValue('bird')
         await petTypeDropDown.selectOption('dog')
 
-        await expect(page.locator('.form-group', { hasText: "Type" }).getByRole('textbox')).toHaveValue('dog')
+        await expect(page.getByLabel('Type')).toHaveValue('dog')
         await expect(petTypeDropDown).toContainText('dog')
 
         await page.getByRole('button', { name: "Update Pet" }).click()
-        await expect(page.locator('td', { hasText: "Rosy" }).locator('.dl-horizontal')).toContainText('dog')
+        await expect(petRosy.getByRole('row', {name: "Type"})).toContainText('dog')
     })
 
 })
