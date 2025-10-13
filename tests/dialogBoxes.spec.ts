@@ -19,7 +19,7 @@ test.describe('Dialog Boxes', () => {
 
         // 4. Add assertions of "New Pet Type" section title, "Name" header for the input field and the input field is visible
         await expect(page.getByRole('heading', {name:"New Pet Type"})).toBeVisible()
-        await expect(page.locator('#pettype')).toContainText("Name")
+        await expect(page.locator("app-pettype-add").locator("label")).toContainText("Name")
         await expect(page.locator('#name')).toBeVisible()
        
         // 5. Add a new pet type with the name "pig" and click "Save" button
