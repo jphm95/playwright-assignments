@@ -188,7 +188,6 @@ test.describe('Web Tables', () => {
 
         // 6. Click on the Specialties drop-down menu. Extract all values from the drop-down menu to an array
         await page.locator('.dropdown-arrow').click()
-        //const specialtiesDropdownList = await page.locator('.dropdown-content').allTextContents()
 
         const dropdownContent = page.locator('.dropdown-content label')
         const specialtiesDropdownList = []
