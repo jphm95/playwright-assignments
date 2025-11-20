@@ -22,8 +22,7 @@ test.describe('Web Tables', () => {
         await page.getByRole('link', { name: "SEARCH" }).click()
 
         // 2. In the list of Owners, locate all owners who live in the city of "Madison". Add the assertion that the total number of owners should be 4
-        const madisonOwners = page.locator('tbody tr', { hasText: 'Madison' })
-        await expect(madisonOwners).toHaveCount(4)
+        await expect(page.locator('tbody tr', { hasText: 'Madison' })).toHaveCount(4)
     })
 
     test('TC3: Validate search by Last Name', async ({ page }) => {
@@ -31,45 +30,38 @@ test.describe('Web Tables', () => {
         const inputFieldLastName = page.locator('#lastName')
         const buttonFindOwner = page.getByRole('button', { name: "Find Owner" })
         const ownersList = page.locator('.ownerFullName')
+        const wordList = ["Black", "Davis", "Es", "Playwright"]
 
         // 1. Select the OWNERS menu item in the navigation bar and then select "Search" from the drop-down menu
         await page.getByRole('button', { name: "OWNERS" }).click()
         await page.getByRole('link', { name: "SEARCH" }).click()
 
-        // 2. On the Owners page, in the "Last name" input field, type the last name "Black" and click the  "Find Owner" button
-        await inputFieldLastName.fill('Black')
-        await buttonFindOwner.click()
+        /* 
+        2. On the Owners page, in the "Last name" input field, type the last name "Black" and click the  "Find Owner" button
+        3. Add the assertion that the displayed owner in the table has a last name "Black"
+        4. In the "Last name" input field, type the last name "Davis" and click the "Find Owner" button
+        5. Add the assertion that each owner displayed in the table has a last name "Davis"
+        6. In the "Last name" input field, type the partial match for the last name "Es" and click the "Find Owner" button       
+        7. Add the assertion that each owner displayed in the table has a last name containing "Es"
+        8. In the "Last name" input field, type the last name "Playwright" click the "Find Owner" button       
+        9. Add the assertion of the message "No owners with LastName starting with "Playwright""   */
 
-        // 3. Add the assertion that the displayed owner in the table has a last name "Black"
-        await expect(page.locator('td').nth(0)).toContainText('Black')
+        for(let searchedWord of wordList){
+            await page.locator('#lastName').clear()
+            await page.locator('#lastName').fill(searchedWord)
+            await page.getByRole('button', { name: "Find Owner" }).click()
+            await page.waitForTimeout(500)
 
-        // 4. In the "Last name" input field, type the last name "Davis" and click the "Find Owner" button
-        await inputFieldLastName.clear()
-        await inputFieldLastName.fill('Davis')
-        await buttonFindOwner.click()
-
-        // 5. Add the assertion that each owner displayed in the table has a last name "Davis"
-        for (let owner of await ownersList.all()) {
-           await expect(owner).toContainText('Davis')
-        }
-
-        // 6. In the "Last name" input field, type the partial match for the last name "Es" and click the "Find Owner" button
-        await inputFieldLastName.clear()
-        await inputFieldLastName.fill('Es')
-        await buttonFindOwner.click()
-
-        // 7. Add the assertion that each owner displayed in the table has a last name containing "Es"
-        for (let owner of await ownersList.all()) {
-           await expect(owner).toContainText('Es')
-        }
-
-        // 8. In the "Last name" input field, type the last name "Playwright" click the "Find Owner" button
-        await inputFieldLastName.clear()
-        await inputFieldLastName.fill('Playwright')
-        await buttonFindOwner.click()
-
-        // 9. Add the assertion of the message "No owners with LastName starting with "Playwright"" 
-        await expect(page.locator('app-owner-list')).toContainText('No owners with LastName starting with "Playwright"')
+            for (let owner of await ownersList.all()){        
+                if( searchedWord == "Black"){
+                    expect(await page.locator('td').nth(0)).toContainText(searchedWord)
+                } else if (searchedWord == "Playwright") {
+                    expect(await page.locator('app-owner-list')).toContainText('No owners with LastName starting with "Playwright"')   
+                } else {
+                    await expect(owner).toContainText(searchedWord)
+                }
+            }
+        }  
     })
 
     test('TC4: Validate phone number and pet name on the Owner Information page', async ({ page }) => {
@@ -97,22 +89,16 @@ test.describe('Web Tables', () => {
         // 2. On the Owners page, perform the assertion that Madison city has a list of pets: Leo, George, Mulligan, Freddy
         const petsListFromMadisonCity = []
         const expectedPetsFromMadsison = ['Leo', 'George', 'Mulligan', 'Freddy']
-        const ownerRows = page.locator('tbody tr:has(td.ownerFullName)')
-
-        for(let row of await ownerRows.all()){
-            let cellCity = await row.locator('td').nth(2).textContent()
-            
-            if(cellCity === 'Madison'){
-                const petCells = await row.locator('td').nth(4).locator('tr').all()
-                for (let petRow of petCells){
-                    const petName = (await petRow.textContent())?.trim()
-                    if(petName) petsListFromMadisonCity.push(petName)
-                }   
-            }
+        
+        for(let row of await page.locator('tbody tr', { hasText: 'Madison' }).all() ){
+            const petCells = await row.locator('td').nth(4).locator('tr').all()
+            for (let petRow of petCells){
+                const petName = (await petRow.textContent())?.trim()
+                if(petName) petsListFromMadisonCity.push(petName)
+            }   
         }
-
-        expect(new Set(petsListFromMadisonCity)).toEqual(new Set(expectedPetsFromMadsison))
-
+         
+        expect(new Set(petsListFromMadisonCity)).toEqual(new Set(expectedPetsFromMadsison)) 
     })
 
     test('TC6: Validate specialty update', async ({ page }) => {
@@ -168,8 +154,8 @@ test.describe('Web Tables', () => {
         await page.getByRole('button', {name:"Add"}).click()
         await page.locator('#name').fill('oncology')
         await page.getByRole('button', {name:"Save"}).click()
-        await expect(page.getByRole('row', {name:"oncology"})).toBeVisible()
-
+        await expect(page.locator('tr input').last()).toHaveValue("oncology")
+     
         // 3. Extract all values of specialties and put them into the array.
         const specialtiesList = []
         const specialtiesRows = page.locator('input[name="spec_name"]')
@@ -193,8 +179,8 @@ test.describe('Web Tables', () => {
         const specialtiesDropdownList = []
 
         for (let item of await dropdownContent.all()) {
-           const itemList = (await item.textContent())
-           specialtiesDropdownList.push(itemList);
+           const itemList = await item.textContent()
+           specialtiesDropdownList.push(itemList)
           }
  
         // 7. Add the assertion that array of specialties collected in the step 3 is equal the the array from drop-down menu
