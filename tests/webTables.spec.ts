@@ -27,10 +27,7 @@ test.describe('Web Tables', () => {
 
     test('TC3: Validate search by Last Name', async ({ page }) => {
         //Locator
-        const inputFieldLastName = page.locator('#lastName')
-        const buttonFindOwner = page.getByRole('button', { name: "Find Owner" })
-        const ownersList = page.locator('.ownerFullName')
-        const wordList = ["Black", "Davis", "Es", "Playwright"]
+        const lastNames = ["Black", "Davis", "Es", "Playwright"]
 
         // 1. Select the OWNERS menu item in the navigation bar and then select "Search" from the drop-down menu
         await page.getByRole('button', { name: "OWNERS" }).click()
@@ -46,22 +43,20 @@ test.describe('Web Tables', () => {
         8. In the "Last name" input field, type the last name "Playwright" click the "Find Owner" button       
         9. Add the assertion of the message "No owners with LastName starting with "Playwright""   */
 
-        for(let searchedWord of wordList){
+        for(let lastName of lastNames){
             await page.locator('#lastName').clear()
-            await page.locator('#lastName').fill(searchedWord)
+            await page.locator('#lastName').fill(lastName)
             await page.getByRole('button', { name: "Find Owner" }).click()
-            await page.waitForTimeout(500)
 
-            for (let owner of await ownersList.all()){        
-                if( searchedWord == "Black"){
-                    expect(await page.locator('td').nth(0)).toContainText(searchedWord)
-                } else if (searchedWord == "Playwright") {
-                    expect(await page.locator('app-owner-list')).toContainText('No owners with LastName starting with "Playwright"')   
-                } else {
-                    await expect(owner).toContainText(searchedWord)
-                }
+            const ownersList = page.locator('.ownerFullName')
+                 
+            if (lastName == "Playwright") {
+                await expect(page.locator('app-owner-list')).toContainText('No owners with LastName starting with "Playwright"')   
+            } else {
+                await expect(ownersList.first()).toContainText(lastName)
             }
-        }  
+        }
+          
     })
 
     test('TC4: Validate phone number and pet name on the Owner Information page', async ({ page }) => {
@@ -91,11 +86,8 @@ test.describe('Web Tables', () => {
         const expectedPetsFromMadsison = ['Leo', 'George', 'Mulligan', 'Freddy']
         
         for(let row of await page.locator('tbody tr', { hasText: 'Madison' }).all() ){
-            const petCells = await row.locator('td').nth(4).locator('tr').all()
-            for (let petRow of petCells){
-                const petName = (await petRow.textContent())?.trim()
-                if(petName) petsListFromMadisonCity.push(petName)
-            }   
+            const petName = await row.locator('td').nth(4).locator('tr').allTextContents()
+            petsListFromMadisonCity.push(...petName.map(name => name.trim()))
         }
          
         expect(new Set(petsListFromMadisonCity)).toEqual(new Set(expectedPetsFromMadsison)) 
