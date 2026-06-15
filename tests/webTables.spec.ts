@@ -22,7 +22,7 @@ test.describe('Web Tables', () => {
         await page.getByRole('link', { name: "SEARCH" }).click()
 
         // 2. In the list of Owners, locate all owners who live in the city of "Madison". Add the assertion that the total number of owners should be 4
-        await expect(page.locator('tbody tr', { hasText: 'Madison' })).toHaveCount(4)
+        await expect(page.getByRole('row', { name: 'Madison' })).toHaveCount(4)
     })
 
     test('TC3: Validate search by Last Name', async ({ page }) => {
@@ -47,16 +47,18 @@ test.describe('Web Tables', () => {
             await page.locator('#lastName').clear()
             await page.locator('#lastName').fill(lastName)
             await page.getByRole('button', { name: "Find Owner" }).click()
+            await page.waitForTimeout(500)
 
             const ownersList = page.locator('.ownerFullName')
-                 
+ 
             if (lastName == "Playwright") {
                 await expect(page.locator('app-owner-list')).toContainText('No owners with LastName starting with "Playwright"')   
             } else {
-                await expect(ownersList.first()).toContainText(lastName)
-            }
-        }
-          
+                for (let row of await ownersList.all() ){
+                     expect(await row.textContent()).toContain(lastName)
+              }
+           }
+        }       
     })
 
     test('TC4: Validate phone number and pet name on the Owner Information page', async ({ page }) => {
@@ -65,8 +67,8 @@ test.describe('Web Tables', () => {
         await page.getByRole('link', { name: "SEARCH" }).click()
 
         // 2. Locate the owner by the phone number "6085552765". Extract the Pet name displayed in the table for the owner and save it to the variable. Click on this owner.
-        const petName = await page.locator('tbody tr', {hasText: "6085552765"}).locator('td').nth(4).innerText()
-        await page.locator('tbody tr', {hasText: "6085552765"}).locator('.ownerFullName a').click()
+        const petName = await page.getByRole('row', {name: "6085552765"}).locator('td').nth(4).innerText()
+        await page.getByRole('row', {name: "6085552765"}).locator('.ownerFullName a').click()
 
         // 3. On the Owner Information page, add the assertion that "Telephone" value in the Owner Information card is "6085552765"
         await expect(page.getByRole('row', {name: "Telephone"}).locator('td')).toHaveText('6085552765')
@@ -79,13 +81,13 @@ test.describe('Web Tables', () => {
         // 1. Select the OWNERS menu item in the navigation bar and then select "Search" from the drop-down menu
         await page.getByRole('button', { name: "OWNERS" }).click()
         await page.getByRole('link', { name: "SEARCH" }).click()
-        await page.locator('#ownersTable').waitFor({ state: 'visible', timeout: 40000 });
+        await page.locator('#ownersTable').waitFor({ state: 'visible'});
 
         // 2. On the Owners page, perform the assertion that Madison city has a list of pets: Leo, George, Mulligan, Freddy
         const petsListFromMadisonCity = []
         const expectedPetsFromMadsison = ['Leo', 'George', 'Mulligan', 'Freddy']
         
-        for(let row of await page.locator('tbody tr', { hasText: 'Madison' }).all() ){
+        for(let row of await page.getByRole('row', { name: 'Madison' }).all() ){
             const petName = await row.locator('td').nth(4).locator('tr').allTextContents()
             petsListFromMadisonCity.push(...petName.map(name => name.trim()))
         }
@@ -109,7 +111,7 @@ test.describe('Web Tables', () => {
         await expect(page.getByRole('heading', {name: "Specialties"})).toBeVisible()
 
         // 5. Click on "Edit" button for the "surgery" specialty
-        await page.getByRole('row', {name: "surgery"}).locator('button', {hasText: "Edit"}).click()
+        await page.getByRole('row', {name: "surgery"}).getByRole('button', {name: "Edit"}).click()
 
         // 6. Add assertion "Edit Specialty" page is displayed
         await expect(page.getByRole('heading', {name:"Edit Specialty"})).toBeVisible()
@@ -131,7 +133,7 @@ test.describe('Web Tables', () => {
 
         // 11. Navigate to SPECIALTIES page, revert the changes renaming "dermatology" back to "surgery"
         await page.getByRole('link', { name: "SPECIALTIES" }).click()
-        await page.getByRole('row', {name: "dermatology"}).locator('button', {hasText: "Edit"}).click()
+        await page.getByRole('row', {name: "dermatology"}).getByRole('button', {name: "Edit"}).click()
         await expect(page.locator('#name')).toHaveValue('dermatology');
         await page.locator('#name').fill('surgery')
         await page.getByRole('button', {name:"Update"}).click()
@@ -168,19 +170,14 @@ test.describe('Web Tables', () => {
         await page.locator('.dropdown-arrow').click()
 
         const dropdownContent = page.locator('.dropdown-content label')
-        const specialtiesDropdownList = []
-
-        for (let item of await dropdownContent.all()) {
-           const itemList = await item.textContent()
-           specialtiesDropdownList.push(itemList)
-          }
+        const specialtiesDropdownList = await dropdownContent.allTextContents()
  
         // 7. Add the assertion that array of specialties collected in the step 3 is equal the the array from drop-down menu
         expect(new Set(specialtiesList)).toEqual(new Set(specialtiesDropdownList))
         
         // 8. Select the "oncology" specialty and click "Save vet" button
          await page.getByRole('checkbox', { name: "oncology" }).check()
-         await page.getByRole('heading', { name: 'Edit Veterinarian' }).click()
+         await page.locator('.dropdown-arrow').click()
          await page.getByRole('button', {name:"Save Vet"}).click()
 
         // 9. On the Veterinarians page, add assertion, that "Sharon Jenkins" has specialty "oncology"
@@ -193,7 +190,7 @@ test.describe('Web Tables', () => {
         // 11. Navigate to VETERINARIANS page. Add assertion that "Sharon Jenkins" has no specialty assigned
         await page.getByRole('button', { name: "VETERINARIANS" }).click()
         await page.getByRole('link', { name: "ALL" }).click()
-        await expect(page.getByRole('row', {name:"Sharon Jenkins"}).locator('td').nth(1)).not.toHaveText('oncology')
+        await expect(page.getByRole('row', {name:"Sharon Jenkins"}).locator('td').nth(1)).toBeEmpty()
 
     })
 })
