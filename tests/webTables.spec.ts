@@ -6,10 +6,13 @@ test.beforeEach(async ({ page }) => {
 
 test.describe('Web Tables', () => {
 
-    test('TC1: Validate the pet name city of the owner', async ({ page }) => {
+    test.beforeEach(async ({ page }) => {
         // 1. Select the OWNERS menu item in the navigation bar and then select "Search" from the drop-down menu
         await page.getByRole('button', { name: "OWNERS" }).click()
         await page.getByRole('link', { name: "SEARCH" }).click()
+    })
+
+    test('TC1: Validate the pet name city of the owner', async ({ page }) => {
 
         // 2. In the list of Owners, locate the owner by the name "Jeff Black". Add the assertions that this owner is from the city of "Monona" and he has a pet with a name "Lucky"
         await expect(page.getByRole('row', { name: "Jeff Black" }).locator('td').nth(2)).toContainText('Monona')
@@ -17,9 +20,6 @@ test.describe('Web Tables', () => {
     })
 
     test('TC2: Validate owners count of the Madison City', async ({ page }) => {
-        // 1. Select the OWNERS menu item in the navigation bar and then select "Search" from the drop-down menu
-        await page.getByRole('button', { name: "OWNERS" }).click()
-        await page.getByRole('link', { name: "SEARCH" }).click()
 
         // 2. In the list of Owners, locate all owners who live in the city of "Madison". Add the assertion that the total number of owners should be 4
         await expect(page.getByRole('row', { name: 'Madison' })).toHaveCount(4)
@@ -28,10 +28,6 @@ test.describe('Web Tables', () => {
     test('TC3: Validate search by Last Name', async ({ page }) => {
         //Locator
         const lastNames = ["Black", "Davis", "Es", "Playwright"]
-
-        // 1. Select the OWNERS menu item in the navigation bar and then select "Search" from the drop-down menu
-        await page.getByRole('button', { name: "OWNERS" }).click()
-        await page.getByRole('link', { name: "SEARCH" }).click()
 
         /* 
         2. On the Owners page, in the "Last name" input field, type the last name "Black" and click the  "Find Owner" button
@@ -44,16 +40,16 @@ test.describe('Web Tables', () => {
         9. Add the assertion of the message "No owners with LastName starting with "Playwright""   */
 
         for(let lastName of lastNames){
+            const ownersList = page.locator('.ownerFullName')
+
             await page.locator('#lastName').clear()
             await page.locator('#lastName').fill(lastName)
             await page.getByRole('button', { name: "Find Owner" }).click()
-            await page.waitForTimeout(500)
-
-            const ownersList = page.locator('.ownerFullName')
  
             if (lastName == "Playwright") {
                 await expect(page.locator('app-owner-list')).toContainText('No owners with LastName starting with "Playwright"')   
             } else {
+                await expect(ownersList.first()).toContainText(lastName)
                 for (let row of await ownersList.all() ){
                      expect(await row.textContent()).toContain(lastName)
               }
@@ -62,9 +58,6 @@ test.describe('Web Tables', () => {
     })
 
     test('TC4: Validate phone number and pet name on the Owner Information page', async ({ page }) => {
-        // 1. Select the OWNERS menu item in the navigation bar and then select "Search" from the drop-down menu
-        await page.getByRole('button', { name: "OWNERS" }).click()
-        await page.getByRole('link', { name: "SEARCH" }).click()
 
         // 2. Locate the owner by the phone number "6085552765". Extract the Pet name displayed in the table for the owner and save it to the variable. Click on this owner.
         const petName = await page.getByRole('row', {name: "6085552765"}).locator('td').nth(4).innerText()
@@ -77,10 +70,7 @@ test.describe('Web Tables', () => {
         await expect(page.locator('app-pet-list dt:has-text("Name") + dd')).toHaveText(petName); 
     })
 
-    test('TC5: Validate pets of the Madison city', async ({ page }) => {
-        // 1. Select the OWNERS menu item in the navigation bar and then select "Search" from the drop-down menu
-        await page.getByRole('button', { name: "OWNERS" }).click()
-        await page.getByRole('link', { name: "SEARCH" }).click()
+    test('TC5: Validate pets of the Madison city', async ({ page }) => {   
         await page.locator('#ownersTable').waitFor({ state: 'visible'});
 
         // 2. On the Owners page, perform the assertion that Madison city has a list of pets: Leo, George, Mulligan, Freddy
@@ -94,6 +84,8 @@ test.describe('Web Tables', () => {
          
         expect(new Set(petsListFromMadisonCity)).toEqual(new Set(expectedPetsFromMadsison)) 
     })
+
+})
 
     test('TC6: Validate specialty update', async ({ page }) => {
     
@@ -169,8 +161,7 @@ test.describe('Web Tables', () => {
         // 6. Click on the Specialties drop-down menu. Extract all values from the drop-down menu to an array
         await page.locator('.dropdown-arrow').click()
 
-        const dropdownContent = page.locator('.dropdown-content label')
-        const specialtiesDropdownList = await dropdownContent.allTextContents()
+        const specialtiesDropdownList = await page.locator('.dropdown-content label').allTextContents()
  
         // 7. Add the assertion that array of specialties collected in the step 3 is equal the the array from drop-down menu
         expect(new Set(specialtiesList)).toEqual(new Set(specialtiesDropdownList))
@@ -193,6 +184,3 @@ test.describe('Web Tables', () => {
         await expect(page.getByRole('row', {name:"Sharon Jenkins"}).locator('td').nth(1)).toBeEmpty()
 
     })
-})
-
- 
