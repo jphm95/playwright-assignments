@@ -44,13 +44,14 @@ test.describe('Web Tables', () => {
 
             await page.locator('#lastName').fill(lastName)
             await page.getByRole('button', { name: "Find Owner" }).click()
- 
+            await page.waitForResponse(resp => resp.url().includes(`/owners?lastName=${lastName}`))
+
             if (lastName == "Playwright") {
                 await expect(page.locator('app-owner-list')).toContainText('No owners with LastName starting with "Playwright"')   
             } else {
-                await expect(ownersList.first()).toContainText(lastName)
+                
                 for (let row of await ownersList.all() ){
-                     expect(await row.textContent()).toContain(lastName)
+                     await expect(row).toContainText(lastName)
               }
            }
         }       
