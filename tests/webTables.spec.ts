@@ -42,7 +42,6 @@ test.describe('Web Tables', () => {
         for(let lastName of lastNames){
             const ownersList = page.locator('.ownerFullName')
 
-            await page.locator('#lastName').clear()
             await page.locator('#lastName').fill(lastName)
             await page.getByRole('button', { name: "Find Owner" }).click()
  
