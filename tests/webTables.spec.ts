@@ -49,7 +49,6 @@ test.describe('Web Tables', () => {
             if (lastName == "Playwright") {
                 await expect(page.locator('app-owner-list')).toContainText('No owners with LastName starting with "Playwright"')   
             } else {
-                
                 for (let row of await ownersList.all() ){
                      await expect(row).toContainText(lastName)
               }
